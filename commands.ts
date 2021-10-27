@@ -1,8 +1,11 @@
+const CodeMirror = window.CodeMirror;
+const Pos = CodeMirror.Pos;
+
 export const selectNextOccurrence = (cm: any) => {
   var from = cm.getCursor("from"),
     to = cm.getCursor("to");
   var fullWord = cm.state.sublimeFindFullWord == cm.doc.sel;
-  if (Pos.cmp(from, to) == 0) {
+  if (CodeMirror.cmpPos(from, to) == 0) {
     var word = wordAt(cm, from);
     if (!word.word) return;
     cm.setSelection(word.from, word.to);
@@ -40,32 +43,13 @@ function wordAt(cm: CodeMirror.Editor, pos: CodeMirror.Position) {
   var start = pos.ch,
     end = start,
     line = cm.getLine(pos.line);
-  while (start && isWordChar(line.charAt(start - 1))) --start;
-  while (end < line.length && isWordChar(line.charAt(end))) ++end;
+  while (start && CodeMirror.isWordChar(line.charAt(start - 1))) --start;
+  while (end < line.length && CodeMirror.isWordChar(line.charAt(end))) ++end;
   return {
     from: new Pos(pos.line, start),
     to: new Pos(pos.line, end),
     word: line.slice(start, end),
   };
-}
-
-class Pos {
-  line: number;
-  ch: number;
-  sticky?: string | null;
-
-  constructor(line: number, ch: number, sticky: string = null) {
-    if (!(this instanceof Pos)) {
-      return new Pos(line, ch, sticky);
-    }
-    this.line = line;
-    this.ch = ch;
-    this.sticky = sticky;
-  }
-
-  static cmp(a: CodeMirror.Position, b: CodeMirror.Position) {
-    return a.line - b.line || a.ch - b.ch;
-  }
 }
 
 function isSelectedRange(
@@ -75,26 +59,11 @@ function isSelectedRange(
 ) {
   for (var i = 0; i < ranges.length; i++)
     if (
-      Pos.cmp(ranges[i].from(), from) == 0 &&
-      Pos.cmp(ranges[i].to(), to) == 0
+      CodeMirror.cmpPos(ranges[i].from(), from) == 0 &&
+      CodeMirror.cmpPos(ranges[i].to(), to) == 0
     )
       return true;
   return false;
-}
-
-let nonASCIISingleCaseWordChar = /[\u00df\u0587\u0590-\u05f4\u0600-\u06ff\u3040-\u309f\u30a0-\u30ff\u3400-\u4db5\u4e00-\u9fcc\uac00-\ud7af]/;
-function isWordCharBasic(ch: string) {
-  return (
-    /\w/.test(ch) ||
-    (ch > "\x80" &&
-      (ch.toUpperCase() != ch.toLowerCase() ||
-        nonASCIISingleCaseWordChar.test(ch)))
-  );
-}
-function isWordChar(ch: string, helper?: any) {
-  if (!helper) return isWordCharBasic(ch);
-  if (helper.source.indexOf("\\w") > -1 && isWordCharBasic(ch)) return true;
-  return helper.test(ch);
 }
 
 function addCursorToSelection(cm: any, dir: number) {
