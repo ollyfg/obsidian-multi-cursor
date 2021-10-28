@@ -1,6 +1,6 @@
 {
   "name": "obsidian-multi-click",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "This plugin enhances the default multi-cursor implementation.",
   "main": "main.js",
   "scripts": {
