@@ -48,12 +48,23 @@ export class SettingsTab extends PluginSettingTab {
 
     containerEl.createEl("h2", { text: "Settings for Extended Multi Cursor." });
 
-    // The binding setting
+    // The click enhancer setting
+    const clickSetting = new Setting(containerEl)
+      .setName("Enhanced Alt-Click")
+      .setDesc("Lets you Alt-Click on existing selections to de-select them.")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.clickEnhance)
+          .onChange(async (value) => {
+            this.plugin.settings.clickEnhance = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    // The key binding setting
     const modeSetting = new Setting(containerEl)
       .setName("Keybindings")
-      .setDesc(
-        "Which keybindings to use, when it comes to multi-cursor selection"
-      )
+      .setDesc("Keybindings to use, when it comes to multi-cursor selection.")
       .addDropdown((input) => {
         // Add the options
         Object.keys(BINDINGS).forEach((value) => {
@@ -66,9 +77,11 @@ export class SettingsTab extends PluginSettingTab {
         });
 
         // Handle changes
-        input.onChange(() => {
+        input.onChange(async () => {
           const mode = input.getValue() as Binding;
           this.plugin.settings.mode = mode;
+          // Start saving the settings
+          const savePromise = this.plugin.saveSettings();
           this.display(); // Re-render
           // Apply the keybindings
           const keyMap = Object.fromEntries(
@@ -79,21 +92,36 @@ export class SettingsTab extends PluginSettingTab {
           this.plugin.codeMirrors.forEach((cm) => {
             cm.setOption("extraKeys", keyMap);
           });
+          // Wait for the settings to be saved
+          await savePromise;
         });
 
         // Select active value
         input.setValue(this.plugin.settings.mode);
       });
 
+    this.renderKeyBindings(this.containerEl);
+  }
+
+  /*
+    Render the section that describes the current key bindings
+  */
+  renderKeyBindings(containerEl: HTMLElement): void {
     const currentMode = this.plugin.settings.mode;
     const currentBindings = Object.entries(BINDINGS[currentMode]);
+    containerEl.createEl("h2", { text: "Key Bindings" });
     if (currentBindings.length) {
-      // List the current bindings
-      containerEl.createEl("h2", { text: "Key Bindings" });
+      containerEl.createEl("p", {
+        text: "These will override any default key bindings you have set.",
+      });
       containerEl.createEl("pre", {
         text: currentBindings
           .map(([key, command]) => `${key}: ${command.name}`)
           .join("\n"),
+      });
+    } else {
+      containerEl.createEl("p", {
+        text: "No bindings set.",
       });
     }
   }

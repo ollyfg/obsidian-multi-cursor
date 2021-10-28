@@ -32,8 +32,30 @@ export const addCursorToPrevLine = (cm: CodeMirror.Editor) =>
 export const addCursorToNextLine = (cm: CodeMirror.Editor) =>
   addCursorToSelection(cm, 1);
 
-export const toggleCursorAtClick = (cm: CodeMirror.Editor) => {
-  console.log("CLICK");
+export const toggleCursorAtClick = (cm: CodeMirror.Editor, evt: MouseEvent) => {
+  const selections = cm.listSelections();
+  const clickPosition = cm.coordsChar({ left: evt.pageX, top: evt.pageY });
+  // Keep track of whether we clicked in a selection
+  let clickInSelection = false;
+  // The new selections are all the selections that haven't just been clicked in
+  const newSelections = selections.filter((range) => {
+    const smallerThanHead = CodeMirror.cmpPos(range.from(), clickPosition) <= 0;
+    const largerThanTail = CodeMirror.cmpPos(range.to(), clickPosition) >= 0;
+    const wasClicked = smallerThanHead && largerThanTail;
+
+    if (wasClicked) {
+      clickInSelection = true;
+    }
+
+    return !wasClicked;
+  });
+  cm.setSelections(newSelections);
+
+  // If we just clicked in a selection, prevent this event from bubbling.
+  // That would cause the selection we just removed to be added again!
+  if (clickInSelection) {
+    evt.preventDefault();
+  }
 };
 
 /*

@@ -11,9 +11,11 @@ import {
 
 import { SettingsTab } from "./settings";
 import { Binding, PluginSettings } from "./types";
+import * as Commands from "./commands";
 
 const DEFAULT_SETTINGS: PluginSettings = {
   mode: "NONE",
+  clickEnhance: false,
 };
 
 export default class MyPlugin extends Plugin {
@@ -29,23 +31,26 @@ export default class MyPlugin extends Plugin {
     // Get an instance of the underlying editors (CodeMirror objects)
     this.registerCodeMirror((cm) => {
       this.codeMirrors.push(cm);
-    });
 
-    // Listen for click events that might be multi-cursor clicks (Alt-click)
-    this.registerDomEvent(
-      document,
-      "click",
-      (evt: MouseEvent & { path?: HTMLElement[] }) => {
-        const activeEditor = this.codeMirrors.find((cm) => cm.state.focused);
-        const isMultiClick = evt.altKey && activeEditor;
-        if (isMultiClick) {
-          console.log("Multi click!", evt, activeEditor);
-        }
-      }
-    );
+      // Listen for click events that might be multi-cursor clicks (Alt-click)
+      cm.on("mousedown", this.onClick.bind(this));
+    });
   }
 
-  onunload() {}
+  // Handle multi-cursor clicks
+  onClick(cm: CodeMirror.Editor, evt: MouseEvent) {
+    const enabled = this.settings.clickEnhance;
+    const isMultiClick = evt.altKey;
+    if (isMultiClick && enabled) {
+      Commands.toggleCursorAtClick(cm, evt);
+    }
+  }
+
+  onunload() {
+    this.codeMirrors.forEach((cm) => {
+      cm.off("mousedown", this.onClick);
+    });
+  }
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
