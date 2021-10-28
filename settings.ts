@@ -63,8 +63,8 @@ export class SettingsTab extends PluginSettingTab {
 
     // The key binding setting
     const modeSetting = new Setting(containerEl)
-      .setName("Keybindings")
-      .setDesc("Keybindings to use, when it comes to multi-cursor selection.")
+      .setName("Key Bindings")
+      .setDesc("Key Bindings to use for multi-cursor selection.")
       .addDropdown((input) => {
         // Add the options
         Object.keys(BINDINGS).forEach((value) => {
