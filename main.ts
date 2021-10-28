@@ -10,11 +10,10 @@ import {
 } from "obsidian";
 
 import { SettingsTab } from "./settings";
-import { Binding, PluginSettings } from "./types";
+import { PluginSettings } from "./types";
 import * as Commands from "./commands";
 
 const DEFAULT_SETTINGS: PluginSettings = {
-  mode: "NONE",
   clickEnhance: false,
 };
 
@@ -34,6 +33,50 @@ export default class MyPlugin extends Plugin {
 
       // Listen for click events that might be multi-cursor clicks (Alt-click)
       cm.on("mousedown", this.onClick.bind(this));
+    });
+
+    // Add the keyboard commands
+    this.addCommand({
+      id: "select-next-occurance",
+      name: "Select next occurance",
+      editorCallback: (editor: any) => {
+        const cm = editor.cm ? editor.cm : editor;
+        Commands.selectNextOccurrence(cm);
+      },
+      hotkeys: [
+        {
+          modifiers: ["Ctrl"],
+          key: "d",
+        },
+      ],
+    });
+    this.addCommand({
+      id: "add-cursor-to-prev-line",
+      name: "Add New Cursor to Previous Line",
+      editorCallback: (editor: any) => {
+        const cm = editor.cm ? editor.cm : editor;
+        Commands.addCursorToPrevLine(cm);
+      },
+      hotkeys: [
+        {
+          modifiers: ["Ctrl", "Alt"],
+          key: "ArrowUp",
+        },
+      ],
+    });
+    this.addCommand({
+      id: "add-cursor-to-next-line",
+      name: "Add New Cursor to Next Line",
+      editorCallback: (editor: any) => {
+        const cm = editor.cm ? editor.cm : editor;
+        Commands.addCursorToNextLine(cm);
+      },
+      hotkeys: [
+        {
+          modifiers: ["Ctrl", "Alt"],
+          key: "ArrowDown",
+        },
+      ],
     });
   }
 
