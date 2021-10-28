@@ -2,6 +2,8 @@
 
 This plugin expands on Obsidian's default multi-cursor support.
 
+If you want more advanced options, see [Advanced Cursors](https://github.com/SkepticMystic/advanced-cursors) by SkepticMystic.
+
 ## De-Select
 
 When you Alt-Click on an existing selection, remove it.
